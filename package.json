@@ -4,9 +4,12 @@
   "main": "index.js",
   "license": "MIT",
   "scripts": {
-    "start": "nodemon app.js"
+    "start": "nodemon server.js",
+    "db:import": "node dev-data/data/import-dev-data.js --import",
+    "db:drop": "node dev-data/data/import-dev-data.js --delete"
   },
   "dependencies": {
+    "dotenv": "^16.3.1",
     "express": "^4.18.2",
     "mongoose": "^7.3.3"
   },
