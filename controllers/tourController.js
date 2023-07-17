@@ -1,4 +1,5 @@
 const Tour = require('../models/tourModel')
+const APIFeatures = require('../utils/apiFeatures')
 
 exports.topFiveToursMiddleware = (req, res, next) => {
     req.query.limit = '5'
@@ -26,34 +27,13 @@ exports.createTour = async (req, res) => {
 
 exports.getAllTours = async (req, res) => {
     try {
-        const query = {...req.query}
-        const limit = query.limit | 4
-        const page = query.page | 1
-        const skip = (page - 1) * limit
+        const toursFeature = new APIFeatures(Tour.find(), req.query)
+            .filter()
+            .sort()
+            .fields()
+            .paginate()
 
-        const excludedFields = ['page', 'sort', 'limit', 'fields']
-        excludedFields.forEach(field => delete query[field])
-        const queryString = JSON.stringify(query).replace(/\b(gte|gt|lte|lt)\b/g, el => `$${el}`)
-
-
-        const toursQuery = Tour.find(JSON.parse(queryString)).limit(limit).skip(skip)
-
-        // sorting
-        if (req.query.sort) {
-            toursQuery.sort(req.query.sort)
-        } else {
-            toursQuery.sort('createdAt')
-        }
-
-        // fields
-        if (req.query.fields) {
-            const fields = req.query.fields.split(',').join(' ')
-            toursQuery.select(fields)
-        } else {
-            toursQuery.select('-__v')
-        }
-
-        const tours = await toursQuery
+        const tours = await toursFeature.query
 
         return res.status(201).json({
             status: 'success',
