@@ -3,14 +3,14 @@ const APIFeatures = require('../utils/apiFeatures')
 const catchAsync = require('../utils/catchAsync')
 const AppError = require('../utils/appError')
 
-exports.topFiveToursMiddleware = (req, res, next) => {
+const topFiveToursMiddleware = (req, res, next) => {
     req.query.limit = '5'
     req.query.sort = '-ratingsAverage'
     req.query.fields = 'name,price,ratingsAverage,summary,difficulty,'
     next()
 }
 
-exports.createTour = catchAsync(async (req, res, next) => {
+const createTour = catchAsync(async (req, res, next) => {
     const newTour = await Tour.create(req.body)
     return res.status(201).json({
         status: 'success',
@@ -20,7 +20,7 @@ exports.createTour = catchAsync(async (req, res, next) => {
     })
 })
 
-exports.getAllTours = catchAsync(async (req, res, next) => {
+const getAllTours = catchAsync(async (req, res, next) => {
     const toursFeature = new APIFeatures(Tour.find(), req.query)
         .filter()
         .sort()
@@ -38,7 +38,7 @@ exports.getAllTours = catchAsync(async (req, res, next) => {
     })
 })
 
-exports.updateTour = catchAsync(async (req, res, next) => {
+const updateTour = catchAsync(async (req, res, next) => {
     const tour = await Tour.findByIdAndUpdate(req.params.id, req.body, {
         new: true
     })
@@ -51,7 +51,7 @@ exports.updateTour = catchAsync(async (req, res, next) => {
     })
 })
 
-exports.getOneTour = catchAsync(async (req, res, next) => {
+const getOneTour = catchAsync(async (req, res, next) => {
     const tour = await Tour.findById(req.params.id)
     if (!tour) {
         return next(new AppError('No tour with that ID', 404))
@@ -62,7 +62,7 @@ exports.getOneTour = catchAsync(async (req, res, next) => {
     })
 })
 
-exports.deleteTour = catchAsync(async (req, res, next) => {
+const deleteTour = catchAsync(async (req, res, next) => {
     const tour = await Tour.findByIdAndDelete(req.params.id)
     if (!tour) {
         return next(new AppError('No tour with that ID', 404))
@@ -73,7 +73,7 @@ exports.deleteTour = catchAsync(async (req, res, next) => {
     })
 })
 
-exports.getTourStats = catchAsync(async (req, res, next) => {
+const getTourStats = catchAsync(async (req, res, next) => {
     const stats = await Tour.aggregate([
         {
             $group: {
@@ -102,7 +102,7 @@ exports.getTourStats = catchAsync(async (req, res, next) => {
     })
 })
 
-exports.getMonthlyPlan = catchAsync(async (req, res, next) => {
+const getMonthlyPlan = catchAsync(async (req, res, next) => {
     const year = req.params.year
     const plan = await Tour.aggregate([
         {
@@ -141,3 +141,14 @@ exports.getMonthlyPlan = catchAsync(async (req, res, next) => {
         }
     })
 })
+
+module.exports = {
+    topFiveToursMiddleware,
+    createTour,
+    getAllTours,
+    updateTour,
+    getOneTour,
+    deleteTour,
+    getTourStats,
+    getMonthlyPlan,
+}

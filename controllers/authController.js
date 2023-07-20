@@ -2,7 +2,7 @@ const catchAsync = require('../utils/catchAsync')
 const AppError = require('../utils/appError')
 const User = require('../models/userModel')
 const jwt = require('jsonwebtoken')
-const {JWT_EXPIRES_IN, JWT_ACCESS_SECRET} = require('../envVariables')
+const {JWT_EXPIRES_IN, JWT_ACCESS_SECRET, JWT_COOKIE_EXPIRES_IN} = require('../envVariables')
 
 const generateAuthResponse = (res, user, status) => {
     const token = jwt.sign({id: user.id}, JWT_ACCESS_SECRET, {
@@ -11,6 +11,14 @@ const generateAuthResponse = (res, user, status) => {
 
     user.password = undefined
 
+    const cookieOptions = {
+        expires: new Date(
+            Date.now() + JWT_COOKIE_EXPIRES_IN * 24 * 60 * 60 * 1000
+        ),
+        httpOnly: true,
+        secure: false
+    };
+    res.cookie('jwt', token, cookieOptions)
     return res.status(status).json({
         status: 'success',
         data: {
@@ -20,7 +28,7 @@ const generateAuthResponse = (res, user, status) => {
     })
 }
 
-exports.signup = catchAsync(async (req, res, next) => {
+const signup = catchAsync(async (req, res, next) => {
     const {fullName, email, password, passwordConfirm} = req.body
     if (await User.findOne({email})) {
         return next(new AppError('User is already exist', 401))
@@ -35,7 +43,7 @@ exports.signup = catchAsync(async (req, res, next) => {
     generateAuthResponse(res, newUser, 201)
 })
 
-exports.login = catchAsync(async (req, res, next) => {
+const login = catchAsync(async (req, res, next) => {
     const {email, password} = req.body
     if (!email || !password) {
         return next(new AppError('Please send email and password', 401))
@@ -48,25 +56,43 @@ exports.login = catchAsync(async (req, res, next) => {
     generateAuthResponse(res, user, 200)
 })
 
-exports.currentUser = catchAsync(async (req, res, next) => {
-    return generateAuthResponse(res, req.user, 200)
+const currentUser = catchAsync(async (req, res, next) => {
+    generateAuthResponse(res, req.user, 200)
 })
 
-exports.authProtect = async (req, res, next) => {
-    try {
-        const token = req.headers.authorization.split(' ')[1]
-        const decode = jwt.verify(token, JWT_ACCESS_SECRET)
-        if (!decode) {
-            return next(AppError.UnauthorizedError())
-        }
-        const candidate = await User.findById(decode.id)
-        if (!candidate) {
-            return next(AppError.UnauthorizedError())
-        }
-        req.user = candidate
-        next()
-    } catch (e) {
+const authProtect = catchAsync(async (req, res, next) => {
+    const token = req.headers.authorization.split(' ')[1]
+    const decode = jwt.verify(token, JWT_ACCESS_SECRET)
+    if (!decode) {
+        return next(AppError.UnauthorizedError())
+    }
+    const candidate = await User.findById(decode.id)
+    if (!candidate) {
         return next(AppError.UnauthorizedError())
     }
 
+    if (candidate.changedPasswordAfter(decode.iat)) {
+        return next(new AppError('User recently changed password! Please login again.', 401))
+    }
+
+    req.user = candidate
+    next()
+})
+
+const rolesProtect = (...roles) => {
+    return (req, res, next) => {
+        if (!roles.includes(req.user.role)) {
+            next(new AppError('You have not access to this resource', 403))
+        }
+        next()
+    }
+}
+
+module.exports = {
+    generateAuthResponse,
+    signup,
+    login,
+    currentUser,
+    authProtect,
+    rolesProtect
 }
