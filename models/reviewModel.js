@@ -27,7 +27,8 @@ const reviewSchema = mongoose.Schema(
             required: [true, 'Review must belong to a user']
         },
 
-    }, {
+    },
+    {
         toJSON: {virtuals: true},
         toObject: {virtuals: true}
     }
@@ -69,7 +70,7 @@ reviewSchema.post('save', function () {
     return this.populate({path: 'user', select: 'fullName photo'})
 })
 
-reviewSchema.post(/^findOneAnd/, async function(doc) {
+reviewSchema.post(/^findOneAnd/, async function (doc) {
     await doc.constructor.calculateAverageRatings(doc.tour);
 });
 

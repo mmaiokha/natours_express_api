@@ -17,7 +17,8 @@ const tourSchema = new mongoose.Schema(
         },
         ratingsAverage: {
             type: Number,
-            default: 0
+            default: 0,
+            set: val => Math.round(val * 10) / 10
         },
         ratingsQuantity: {
             type: Number,
@@ -49,7 +50,36 @@ const tourSchema = new mongoose.Schema(
             default: Date.now(),
             select: false
         },
-        startDates: [Date]
+        startDates: [Date],
+        startLocation: {
+            type: {
+                type: String,
+                default: 'Point',
+                enum: ['Point']
+            },
+            coordinates: [Number],
+            address: String,
+            description: String,
+        },
+        locations: [
+            {
+                type: {
+                    type: String,
+                    default: 'Point',
+                    enum: ['Point']
+                },
+                coordinates: [Number],
+                address: String,
+                description: String,
+            }
+        ],
+        guides: [
+            {
+
+                type: mongoose.Schema.ObjectId,
+                ref: 'users'
+            }
+        ]
     },
     {
         toJSON: {virtuals: true},
