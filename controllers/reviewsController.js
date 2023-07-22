@@ -1,6 +1,5 @@
-const catchAsync = require('../utils/catchAsync')
-const AppError = require('../utils/appError')
 const Review = require('../models/reviewModel')
+const factory = require('./handleFactory')
 
 const setIds = (req, res, next) => {
     if (!req.body.tour) req.body.tour = req.params.tourId
@@ -8,61 +7,15 @@ const setIds = (req, res, next) => {
     next()
 }
 
-const getAllReviews = catchAsync(async (req, res, next) => {
-    const reviews = await Review.find()
+const getAllReviews = factory.getAll(Review)
 
-    return res.status(200).json({
-        status: 'success',
-        data: {
-            reviews
-        }
-    })
-})
+const getOneReview = factory.getOne(Review)
 
-const getOneReview = catchAsync(async (req, res, next) => {
-    const review = await Review.findById(req.params.id)
-    if(!review) {
-        return next(new AppError('Review with this ID does not exist', 404))
-    }
+const createReview = factory.createOne(Review)
 
-    return res.status(200).json({
-        status: 'success',
-        review
-    })
-})
+const deleteReview = factory.deleteOne(Review)
 
-const createReview = catchAsync(async (req, res, next) => {
-    const review = await Review.create(req.body)
-    return res.status(201).json({
-        status: 'success',
-        review
-    })
-})
-
-const deleteReview = catchAsync(async (req, res, next) => {
-    const review = await Review.findByIdAndDelete(req.params.id)
-    if (!review) {
-        return next(new AppError('No review with this ID', 404))
-    }
-
-    return res.status(204).json({
-        status: 'success',
-        review
-    })
-})
-
-const updateReview = catchAsync(async (req, res, next) => {
-    const review = await Review.findByIdAndUpdate(req.params.id, req.body, {
-        new: true
-    })
-    if (!review) {
-        return next(new AppError('No tour with this ID', 404))
-    }
-    return res.status(200).json({
-        status: 'success',
-        review
-    })
-})
+const updateReview = factory.updateOne(Review)
 
 module.exports = {
     createReview,

@@ -49,7 +49,6 @@ const forgotPassword = catchAsync(async (req, res, next) => {
             message: 'Reset password link sent to your email.'
         })
     } catch (e) {
-        console.log(e)
         return next(new AppError('There was an error sending the email. Try again later', 500))
     }
 

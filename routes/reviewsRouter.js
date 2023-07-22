@@ -14,7 +14,6 @@ reviewsRouter.route('/')
         reviewsController.createReview
     )
 
-
 reviewsRouter.route('/:id')
     .get(reviewsController.getOneReview)
     .delete(authController.rolesProtect('user', 'admin'), reviewsController.deleteReview)
