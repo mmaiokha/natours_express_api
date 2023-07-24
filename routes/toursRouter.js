@@ -15,13 +15,21 @@ tourRouter.route('/within/:distance/center/:latlng/unit/:unit').get(tourControll
 
 tourRouter
     .route('/')
-    .post(tourController.createTour)
+    .post(
+        tourController.uploadTourImages,
+        tourController.resizeTourImages,
+        tourController.createTour
+    )
     .get(tourController.getAllTours)
 
 tourRouter
     .route('/:id')
     .delete(tourController.deleteTour)
-    .put(tourController.updateTour)
+    .put(
+        tourController.uploadTourImages,
+        tourController.resizeTourImages,
+        tourController.updateTour
+    )
     .get(tourController.getOneTour)
 
 module.exports = tourRouter

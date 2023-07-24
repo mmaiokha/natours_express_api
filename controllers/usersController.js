@@ -17,6 +17,15 @@ const multerFilter = (req, file, cb) => {
     }
 }
 
+const filterObject = (obj, ...allowedFields) => {
+    const result = {}
+    Object.keys(obj).forEach(el => {
+        if (allowedFields.includes(el)) result[el] = obj[el]
+    })
+
+    return result
+}
+
 const upload = multer({
     storage: multerStorage,
     fileFilter: multerFilter
@@ -34,15 +43,6 @@ const resizePhoto = catchAsync(async (req, res, next) => {
         .toFile(`public/img/users/${req.file.filename}`)
     next()
 })
-
-const filterObject = (obj, ...allowedFields) => {
-    const result = {}
-    Object.keys(obj).forEach(el => {
-        if (allowedFields.includes(el)) result[el] = obj[el]
-    })
-
-    return result
-}
 
 const updateUser = catchAsync(async (req, res, next) => {
     if (req.password) {
