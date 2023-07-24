@@ -1,6 +1,6 @@
 const express = require('express')
 const tourController = require('../controllers/tourController')
-const authController= require('../controllers/authController')
+const authController = require('../controllers/authController')
 
 const reviewsRouter = require('../routes/reviewsRouter')
 
@@ -11,6 +11,7 @@ tourRouter.use('/:tourId/reviews', reviewsRouter)
 tourRouter.route('/top-5').get(tourController.topFiveToursMiddleware, tourController.getAllTours)
 tourRouter.route('/stats').get(tourController.getTourStats)
 tourRouter.route('/plan/:year').get(tourController.getMonthlyPlan)
+tourRouter.route('/within/:distance/center/:latlng/unit/:unit').get(tourController.getTourWithin)
 
 tourRouter
     .route('/')

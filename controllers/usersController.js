@@ -4,6 +4,65 @@ const User = require('../models/userModel')
 const {generateAuthResponse} = require('../controllers/authController')
 const crypto = require('crypto')
 const sendMail = require('../utils/email')
+const multer = require('multer')
+const sharp = require('sharp')
+
+const multerStorage = multer.memoryStorage()
+
+const multerFilter = (req, file, cb) => {
+    if (file.mimetype.startsWith('image')) {
+        cb(null, true)
+    } else {
+        cb(new AppError('File must be an image', 400), false)
+    }
+}
+
+const upload = multer({
+    storage: multerStorage,
+    fileFilter: multerFilter
+})
+
+const uploadUserPhoto = upload.single('photo')
+
+const resizePhoto = catchAsync(async (req, res, next) => {
+    if (!req.file) return next()
+
+    req.file.filename = `user-${req.user.id}-${Date.now()}.jpeg`
+
+    await sharp(req.file.buffer)
+        .resize(500, 500).toFormat('jpeg')
+        .toFile(`public/img/users/${req.file.filename}`)
+    next()
+})
+
+const filterObject = (obj, ...allowedFields) => {
+    const result = {}
+    Object.keys(obj).forEach(el => {
+        if (allowedFields.includes(el)) result[el] = obj[el]
+    })
+
+    return result
+}
+
+const updateUser = catchAsync(async (req, res, next) => {
+    if (req.password) {
+        return next(new AppError('This route is not for password update. Please visit /users/reset-password', 500))
+    }
+    const userData = filterObject(req.body, 'fullName', 'email')
+    if (req.file.filename) userData.photo = req.file.filename
+
+    const updatedUser = await User.findByIdAndUpdate(req.user.id, userData, {
+        new: true,
+        runValidators: true
+    })
+
+    return res.status(201).json({
+        status: 'success',
+        data: {
+            data: updatedUser
+        }
+    })
+})
 
 const resetPassword = catchAsync(async (req, res, next) => {
     const {oldPassword, newPassword, newPasswordConfirm} = req.body
@@ -34,9 +93,7 @@ const forgotPassword = catchAsync(async (req, res, next) => {
     const resetToken = user.createResetToken()
     await user.save({validationBefore: false})
 
-    const resetURL = `${req.protocol}://${req.get(
-        'host'
-    )}/api/users/forgot-password/${resetToken}`;
+    const resetURL = `${req.protocol}://${req.get('host')}/api/users/forgot-password/${resetToken}`;
     const message = `Forgot your password? Submit a PUT request with your new password and passwordConfirm to: ${resetURL}.\nIf you didn't forget your password, please ignore this email!`;
     try {
         await sendMail({
@@ -63,7 +120,7 @@ const resetForgottenPassword = catchAsync(async (req, res, next) => {
 
     const user = await User.findOne({
         passwordResetToken: hashedToken,
-        passwordResetExpires: { $gt: Date.now() }
+        passwordResetExpires: {$gt: Date.now()}
     })
 
     if (!user) {
@@ -82,7 +139,10 @@ const resetForgottenPassword = catchAsync(async (req, res, next) => {
 })
 
 module.exports = {
+    updateUser,
     resetPassword,
     forgotPassword,
-    resetForgottenPassword
+    resetForgottenPassword,
+    uploadUserPhoto,
+    resizePhoto
 }

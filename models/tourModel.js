@@ -87,6 +87,8 @@ const tourSchema = new mongoose.Schema(
     }
 )
 
+tourSchema.index({ startLocation: '2dsphere' });
+
 tourSchema.virtual('reviews', {
     ref: "reviews",
     foreignField: 'tour',

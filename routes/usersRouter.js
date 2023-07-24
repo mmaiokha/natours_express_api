@@ -6,7 +6,14 @@ const usersRouter = Router()
 
 usersRouter.route('/signup').post(authController.signup)
 usersRouter.route('/login').post(authController.login)
-usersRouter.route('/me').get(authController.authProtect, authController.currentUser)
+usersRouter.route('/me')
+    .get(authController.authProtect, authController.currentUser)
+    .put(
+        authController.authProtect,
+        usersController.uploadUserPhoto,
+        usersController.resizePhoto,
+        usersController.updateUser
+    )
 
 usersRouter.route('/reset-password').put(authController.authProtect, usersController.resetPassword)
 usersRouter.route('/forgot-password').post(usersController.forgotPassword)
