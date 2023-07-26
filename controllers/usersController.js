@@ -49,7 +49,7 @@ const updateUser = catchAsync(async (req, res, next) => {
         return next(new AppError('This route is not for password update. Please visit /users/reset-password', 500))
     }
     const userData = filterObject(req.body, 'fullName', 'email')
-    if (req.file.filename) userData.photo = req.file.filename
+    if (req.file) userData.photo = req.file.filename
 
     const updatedUser = await User.findByIdAndUpdate(req.user.id, userData, {
         new: true,

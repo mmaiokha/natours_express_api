@@ -1,4 +1,5 @@
 const mongoose = require('mongoose')
+const slugify = require('slugify')
 
 const tourSchema = new mongoose.Schema(
     {
@@ -11,6 +12,7 @@ const tourSchema = new mongoose.Schema(
             type: Number,
             required: [true, 'A tour must have a duration']
         },
+        slug: String,
         maxGroupSize: {
             type: Number,
             required: [true, 'A tour must have a group size']
@@ -88,6 +90,20 @@ const tourSchema = new mongoose.Schema(
 )
 
 tourSchema.index({ startLocation: '2dsphere' });
+
+tourSchema.pre('save', function(next) {
+    this.slug = slugify(this.name, { lower: true });
+    next();
+});
+
+tourSchema.pre(/^find/, function(next) {
+    this.populate({
+        path: 'guides',
+        select: '-__v -passwordChangedAt'
+    });
+
+    next();
+});
 
 tourSchema.virtual('reviews', {
     ref: "reviews",

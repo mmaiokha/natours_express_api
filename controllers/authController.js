@@ -1,3 +1,4 @@
+const { promisify } = require('util');
 const catchAsync = require('../utils/catchAsync')
 const AppError = require('../utils/appError')
 const User = require('../models/userModel')
@@ -27,6 +28,32 @@ const generateAuthResponse = (res, user, status) => {
         }
     })
 }
+
+const isLoggedIn = async (req, res, next) => {
+    if (req.cookies.jwt) {
+        try {
+            const decoded = await promisify(jwt.verify)(
+                req.cookies.jwt,
+                process.env.JWT_ACCESS_SECRET
+            );
+            const currentUser = await User.findById(decoded.id);
+
+            if (!currentUser) {
+                return next();
+            }
+
+            if (currentUser.changedPasswordAfter(decoded.iat)) {
+                return next();
+            }
+
+            res.locals.user = currentUser;
+            return next();
+        } catch (err) {
+            return next();
+        }
+    }
+    next();
+};
 
 const signup = catchAsync(async (req, res, next) => {
     const {fullName, email, password, passwordConfirm} = req.body
@@ -61,7 +88,13 @@ const currentUser = catchAsync(async (req, res, next) => {
 })
 
 const authProtect = catchAsync(async (req, res, next) => {
-    const token = req.headers.authorization.split(' ')[1]
+    let token;
+    if (req.headers.authorization) {
+        token = req.headers.authorization.split(' ')[1]
+    } else if (req.cookies.jwt) {
+        token = req.cookies.jwt
+    }
+
     const decode = jwt.verify(token, JWT_ACCESS_SECRET)
     if (!decode) {
         return next(AppError.UnauthorizedError())
@@ -76,6 +109,7 @@ const authProtect = catchAsync(async (req, res, next) => {
     }
 
     req.user = candidate
+    res.locals.user = candidate;
     next()
 })
 
@@ -94,5 +128,6 @@ module.exports = {
     login,
     currentUser,
     authProtect,
-    rolesProtect
+    rolesProtect,
+    isLoggedIn
 }
