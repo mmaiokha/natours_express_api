@@ -16,6 +16,7 @@ tourRouter.route('/within/:distance/center/:latlng/unit/:unit').get(tourControll
 tourRouter
     .route('/')
     .post(
+        authController.rolesProtect('admin'),
         tourController.uploadTourImages,
         tourController.resizeTourImages,
         tourController.createTour
@@ -24,8 +25,12 @@ tourRouter
 
 tourRouter
     .route('/:id')
-    .delete(tourController.deleteTour)
+    .delete(
+        authController.rolesProtect('admin'),
+        tourController.deleteTour
+    )
     .put(
+        authController.rolesProtect('admin'),
         tourController.uploadTourImages,
         tourController.resizeTourImages,
         tourController.updateTour
