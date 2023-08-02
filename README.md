@@ -50,7 +50,7 @@ MAP_ACCESS_KEY=map_access_key
     "passwordConfirm": string,
 }
 ``` 
-<sub>Return user with tokens</sub></br>
+<sub>Return user with token</sub></br>
 
 </br>`LOGIN` POST [/api/users/login](#/api/users/login) </br>
 
@@ -85,7 +85,7 @@ MAP_ACCESS_KEY=map_access_key
     "email": string,
 }
 ```
-<sub>Return auth response</sub></br></br>
+<sub>Return user with token</sub></br></br>
 
 </br>`RESET FORGOTEN PASSWORD` POST [/api/users/forgot-password/{token}](#/api/auth/forgot-password/{token}) </br>
 <sub>Reset user password.</sub></br>
@@ -97,4 +97,4 @@ MAP_ACCESS_KEY=map_access_key
     "passwordConfirm": string
 }
 ```
-<sub>Return auth response</sub></br></br>
+<sub>Return user with token</sub></br></br>
